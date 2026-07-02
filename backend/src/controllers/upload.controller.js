@@ -1,19 +1,39 @@
-const uploadService = require("../services/upload.service");
+const csvService = require("../services/csv.service");
 
 async function addSampleData(req, res) {
 
     try {
 
-        const result = await uploadService.insertSample();
+        if (!req.file) {
 
-        res.status(201).json(result);
+            return res.status(400).json({
 
-    } catch (error) {
+                message: "CSV file is required."
+
+            });
+
+        }
+
+        const result = await csvService.processCSV(req.file.path);
+
+        return res.status(201).json({
+
+            message: "CSV uploaded successfully.",
+
+            summary: result
+
+        });
+
+    }
+
+    catch (error) {
 
         console.error(error);
 
-        res.status(500).json({
+        return res.status(500).json({
+
             message: "Internal Server Error"
+
         });
 
     }
@@ -21,5 +41,7 @@ async function addSampleData(req, res) {
 }
 
 module.exports = {
+
     addSampleData
+
 };
