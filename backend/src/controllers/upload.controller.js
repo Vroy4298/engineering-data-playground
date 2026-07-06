@@ -1,4 +1,5 @@
 const csvService = require("../services/csv.service");
+const uploadHistoryService = require("../services/uploadHistory.service");
 
 async function addSampleData(req, res) {
 
@@ -40,8 +41,34 @@ async function addSampleData(req, res) {
 
 }
 
+async function getUploadHistory(req, res) {
+
+    try {
+
+        const history = await uploadHistoryService.getUploadHistory();
+
+        return res.status(200).json(history);
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        return res.status(500).json({
+
+            message: "Internal Server Error"
+
+        });
+
+    }
+
+}
+
 module.exports = {
 
-    addSampleData
+    addSampleData,
+
+    getUploadHistory
 
 };

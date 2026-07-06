@@ -72,9 +72,21 @@ async function saveUploadHistory(data) {
     return result.rows[0];
 
 }
+async function getUploadHistory() {
+
+    const result = await pool.query(`
+        SELECT *
+        FROM upload_history
+        ORDER BY uploaded_at DESC;
+    `);
+
+    return result.rows;
+
+}
 
 module.exports = {
     insertRecord,
     getExistingEmails,
-    saveUploadHistory
+    saveUploadHistory,
+    getUploadHistory
 };

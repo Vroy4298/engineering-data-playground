@@ -37,6 +37,13 @@ export async function getRecords(params: {
 
 }
 
+export async function getUploadHistory() {
+
+    const response = await api.get("/upload/history");
+
+    return response.data;
+
+}
 // ================= Upload CSV =================
 
 export async function uploadCSV(file: File) {

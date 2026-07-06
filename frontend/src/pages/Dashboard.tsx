@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
-import StatsCard from "../components/StatsCard";
 import RecordsTable from "../components/RecordsTable";
-import CityFilter from "../components/CityFilter";
-import SortDropdown from "../components/SortDropdown";
 import UploadSection from "../components/UploadSection";
+import StatsGrid from "../components/StatsGrid";
+import Toolbar from "../components/Toolbar";
+import Pagination from "../components/Pagination";
+import toast from "react-hot-toast";
+import Loading from "../components/Loading";
+import CityChart from "../components/CityChart";
 
 import {
     getDashboardStats,
@@ -18,15 +21,18 @@ type RecordType = {
     age: number;
     city: string;
 };
-
 const Dashboard = () => {
 
-    const [stats, setStats] = useState({
-        totalRecords: 0,
-        totalUploads: 0,
-        averageAge: 0,
-        duplicates: 0
-    });
+const [stats, setStats] = useState({
+
+    totalRecords: 0,
+    totalUploads: 0,
+    averageAge: 0,
+    duplicates: 0,
+
+    cities: [] as { city: string; total: number }[]
+
+});
 
     const [records, setRecords] = useState<RecordType[]>([]);
 
@@ -41,8 +47,9 @@ const [order, setOrder] = useState("desc");
     const limit = 5;
 
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
     const [uploading, setUploading] = useState(false);
+
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
 
@@ -64,15 +71,17 @@ const [order, setOrder] = useState("desc");
 
             setStats({
 
-                totalRecords: data.totalRecords,
+    totalRecords: data.totalRecords,
 
-                totalUploads: data.totalUploads,
+    totalUploads: data.totalUploads,
 
-                averageAge: data.averageAge,
+    averageAge: data.averageAge,
 
-                duplicates: data.duplicates || 0
+    duplicates: data.duplicates || 0,
 
-            });
+    cities: data.cities || []
+
+});
 
         }
 
@@ -91,39 +100,45 @@ const [order, setOrder] = useState("desc");
 
         try {
 
-            const data = await getRecords({
+    setLoading(true);
 
-    search: searchTerm,
+    const data = await getRecords({
 
-    city,
+        search: searchTerm,
 
-    page: currentPage,
+        city,
 
-    limit,
+        page: currentPage,
 
-    sort,
+        limit,
 
-    order
+        sort,
 
-});
+        order
 
-            setRecords(data);
+    });
 
-        }
+    setRecords(data);
 
-        catch (error) {
+}
 
-            console.error(error);
+catch (error) {
 
-        }
+    console.error(error);
 
+}
+
+finally {
+
+    setLoading(false);
+
+}
     }
-
     async function handleUpload() {
 
     if (!selectedFile) {
 
-        alert("Please select a CSV file.");
+        toast.error("Please select a CSV file.");
 
         return;
 
@@ -135,7 +150,7 @@ const [order, setOrder] = useState("desc");
 
         await uploadCSV(selectedFile);
 
-        alert("CSV uploaded successfully!");
+        toast.success("CSV uploaded successfully!");
 
         setPage(1);
 
@@ -151,7 +166,7 @@ const [order, setOrder] = useState("desc");
 
         console.error(error);
 
-        alert("Upload failed.");
+        toast.error("Upload failed.");
 
     }
 
@@ -171,21 +186,28 @@ const [order, setOrder] = useState("desc");
 
             <header className="border-b border-slate-800 shadow-lg">
 
-                <div className="max-w-7xl mx-auto px-8 py-6">
+                <div className="max-w-7xl mx-auto px-8 py-6 flex justify-between items-center">
 
-                    <h1 className="text-5xl font-bold text-cyan-400">
+    <div>
 
-                        Engineering Data Playground 🚀
+        <h1 className="text-5xl font-bold text-cyan-400">
+            Engineering Data Playground 🚀
+        </h1>
 
-                    </h1>
+        <p className="mt-3 text-lg text-slate-400">
+            Upload • Analyze • Explore Engineering Data
+        </p>
 
-                    <p className="mt-3 text-lg text-slate-400">
+    </div>
 
-                        Upload • Analyze • Explore Engineering Data
+    <button
+        onClick={() => window.location.href = "/history"}
+        className="bg-cyan-500 px-5 py-3 rounded-lg hover:bg-cyan-600"
+    >
+        Upload History
+    </button>
 
-                    </p>
-
-                </div>
+</div>
 
             </header>
 
@@ -209,44 +231,24 @@ const [order, setOrder] = useState("desc");
 
                 {/* Statistics */}
 
-                <section className="mb-10">
+                <StatsGrid
 
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+    totalRecords={stats.totalRecords}
 
-                        <StatsCard
-                            title="Total Records"
-                            value={stats.totalRecords}
-                            color="text-cyan-400"
-                        />
+    totalUploads={stats.totalUploads}
 
-                        <StatsCard
-                            title="Uploads"
-                            value={stats.totalUploads}
-                            color="text-green-400"
-                        />
+    averageAge={stats.averageAge}
 
-                        <StatsCard
-                            title="Average Age"
-                            value={stats.averageAge}
-                            color="text-yellow-400"
-                        />
+    duplicates={stats.duplicates}
 
-                        <StatsCard
-                            title="Duplicates"
-                            value={stats.duplicates}
-                            color="text-red-400"
-                        />
+/>
 
-                    </div>
+<CityChart
 
-                </section>
+    data={stats.cities}
 
-                {/* Records */}
-
-                {/* Records */}
-
-<section>
-
+/>
+    <section>
     <div className="rounded-2xl border border-slate-800 bg-slate-900 p-8 shadow-lg">
 
         <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -257,97 +259,51 @@ const [order, setOrder] = useState("desc");
 
             </h2>
 
-            <div className="flex flex-col gap-3 md:flex-row">
-
-                <input
-
-                    type="text"
-
-                    placeholder="Search by name or email..."
-
-                    value={search}
-
-                    onChange={(e) => {
-
-                        setSearch(e.target.value);
-
-                        setPage(1);
-
-                    }}
-
-                    className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 outline-none focus:border-cyan-500"
-
-                />
-
-                <CityFilter
-
-                    city={city}
-
-                    setCity={(selectedCity) => {
-
-                        setCity(selectedCity);
-
-                        setPage(1);
-
-                    }}
-
-                />
-                <SortDropdown
-
+            <Toolbar
+    search={search}
+    setSearch={setSearch}
+    city={city}
+    setCity={setCity}
     sort={sort}
-
     order={order}
+    setSort={(value) => {
+        setSort(value);
+        setPage(1);
+    }}
+    setOrder={(value) => {
+        setOrder(value);
+        setPage(1);
+    }}
+    setPage={setPage}
+/>
 
-    setSort={setSort}
+        </div>
 
-    setOrder={setOrder}
+        {
+
+    loading
+
+    ?
+
+    <Loading />
+
+    :
+
+    <RecordsTable
+
+        records={records}
+
+    />
+
+}
+
+        <Pagination
+
+    page={page}
+
+    setPage={setPage}
 
 />
-            </div>
-
-        </div>
-
-        <RecordsTable
-
-            records={records}
-
-        />
-
-        <div className="mt-8 flex items-center justify-center gap-5">
-
-            <button
-
-                onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-
-                disabled={page === 1}
-
-                className="rounded-lg bg-slate-700 px-5 py-2 transition hover:bg-slate-600 disabled:opacity-50"
-
-            >
-
-                Previous
-
-            </button>
-
-            <span className="font-semibold">
-
-                Page {page}
-
-            </span>
-
-            <button
-
-                onClick={() => setPage((prev) => prev + 1)}
-
-                className="rounded-lg bg-cyan-500 px-5 py-2 transition hover:bg-cyan-600"
-
-            >
-
-                Next
-
-            </button>
-
-        </div>
 
     </div>
 

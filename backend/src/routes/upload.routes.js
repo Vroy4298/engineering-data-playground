@@ -7,13 +7,14 @@ const upload = require("../middleware/upload.middleware");
 const uploadController = require("../controllers/upload.controller");
 
 router.post(
-
     "/",
-
     upload.single("file"),
-
     uploadController.addSampleData
+);
 
+router.get(
+    "/history",
+    uploadController.getUploadHistory
 );
 
 module.exports = router;

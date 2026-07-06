@@ -88,6 +88,19 @@ async function processCSV(filePath) {
                         }
 
                     }
+                    await databaseService.saveUploadHistory({
+
+    filename: filePath.split("\\").pop(),
+
+    total: rows.length,
+
+    uploaded,
+
+    duplicates,
+
+    failed: failed.length
+
+});
 
                     resolve({
 
