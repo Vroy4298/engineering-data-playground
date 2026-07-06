@@ -9,8 +9,16 @@ const app = express();
 
 // Middlewares
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "*",
-  credentials: true,
+  origin: function (origin, callback) {
+    // Allow requests with no origin (curl, Postman, server-to-server)
+    if (!origin) return callback(null, true);
+    // Allow if FRONTEND_URL matches, or if no FRONTEND_URL is set (allow all)
+    const allowed = process.env.FRONTEND_URL;
+    if (!allowed || origin === allowed || origin.endsWith(".vercel.app")) {
+      return callback(null, true);
+    }
+    return callback(new Error("Not allowed by CORS"));
+  },
 }));
 
 
