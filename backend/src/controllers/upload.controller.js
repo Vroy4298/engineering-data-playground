@@ -15,7 +15,8 @@ async function addSampleData(req, res) {
 
         }
 
-        const result = await csvService.processCSV(req.file.path);
+        const result = await csvService.processCSV(req.file.buffer, req.file.originalname);
+
 
         return res.status(201).json({
 

@@ -1,16 +1,16 @@
-const fs = require("fs");
+const { Readable } = require("stream");
 const csv = require("csv-parser");
 
 const databaseService = require("./database.service");
 const { validateRow } = require("../utils/validator");
 
-async function processCSV(filePath) {
+async function processCSV(fileBuffer, originalname) {
 
     return new Promise((resolve, reject) => {
 
         const rows = [];
 
-        fs.createReadStream(filePath)
+        Readable.from(fileBuffer)
 
             .pipe(csv())
 
@@ -88,19 +88,14 @@ async function processCSV(filePath) {
                         }
 
                     }
+
                     await databaseService.saveUploadHistory({
-
-    filename: filePath.split("\\").pop(),
-
-    total: rows.length,
-
-    uploaded,
-
-    duplicates,
-
-    failed: failed.length
-
-});
+                        filename: originalname,
+                        total: rows.length,
+                        uploaded,
+                        duplicates,
+                        failed: failed.length
+                    });
 
                     resolve({
 
@@ -132,4 +127,4 @@ async function processCSV(filePath) {
 
 module.exports = {
     processCSV
-};
+};
