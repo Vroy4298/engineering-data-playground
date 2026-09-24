@@ -3,6 +3,7 @@ const csv = require("csv-parser");
 
 const databaseService = require("./database.service");
 const { validateRow } = require("../utils/validator");
+const { sendUploadEvent } = require("../kafka/producer");
 
 async function processCSV(fileBuffer, originalname) {
 
@@ -13,6 +14,7 @@ async function processCSV(fileBuffer, originalname) {
         Readable.from(fileBuffer)
 
             .pipe(csv())
+
 
             .on("data", (row) => {
 
@@ -96,6 +98,21 @@ async function processCSV(fileBuffer, originalname) {
                         duplicates,
                         failed: failed.length
                     });
+                    await sendUploadEvent({
+
+    filename: originalname,
+
+    total: rows.length,
+
+    uploaded,
+
+    duplicates,
+
+    failed: failed.length,
+
+    uploadedAt: new Date().toISOString()
+
+});
 
                     resolve({
 
@@ -127,4 +144,4 @@ async function processCSV(fileBuffer, originalname) {
 
 module.exports = {
     processCSV
-};
+};

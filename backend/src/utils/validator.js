@@ -9,7 +9,7 @@ function validateRow(row) {
     if (!row.email || row.email.trim() === "") {
         errors.push("Email is required");
     }
-
+    
     if (!row.age || isNaN(Number(row.age))) {
         errors.push("Age must be a valid number");
     }
